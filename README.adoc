@@ -1,0 +1,40 @@
+= Weather data service
+This service connects to Google Compute Platform and retrieves weather information
+to be displayed on a map.
+
+== Information used to query the service
+
+== How to enable Google Big Query
+
+=== Create web application credentials
+First, you need to allow the server side code to connect to your Google API. For this
+you will need a *service account*, which is an account that belongs to your application
+instead of to an individual end user. The application calls Google APIs on behalf of the
+service account, so users aren't directly involved.
+
+To support server-to-server interactions, first create a service account for your project in the API Console
+
+Then, your application prepares to make authorized API calls by using the service account's credentials to request an access token from the OAuth 2.0 auth server.
+
+Finally, your application can use the access token to call Google APIs.
+
+==== Creating a service account
+A service account's credentials include a generated email address that is unique and at least one public/private key pair.
+
+If your application doesn't run on Google App Engine or Google Compute Engine, you must obtain these credentials in the Google API Console. To generate service-account credentials, or to view the public credentials that you've already generated, do the following:
+
+* Open the link:https://console.developers.google.com/permissions/serviceaccounts[Service accounts page]. If prompted, select a project.
+* Click *Create service account*.
+* In the *Create service account* window, type a name for the service account, and select *Furnish a new private key.* Then click *Create*.
++
+image:images/create_service_account.png[]
++
+image:images/service_account_created.png[]
+
+Your new public/private key pair is generated and downloaded to your machine; it serves as the only copy of this key. You are responsible for storing it securely.
+
+You can return to the link:https://console.developers.google.com/[API Console] at any time to view the email address, public key fingerprints, and other information, or to generate additional public/private key pairs.
++
+image:images/service_accounts.png[]
+
+Take note of the service account's email address and store the service account's P12 private key file in a location accessible to your application. Your application needs them to make authorized API calls.
