@@ -38,3 +38,30 @@ You can return to the link:https://console.developers.google.com/[API Console] a
 image:images/service_accounts.png[]
 
 Take note of the service account's email address and store the service account's P12 private key file in a location accessible to your application. Your application needs them to make authorized API calls.
+
+== Create a secret with the service account information
+Once you have your Google credentials created, you need to provide them to the application. For this purpose we will use *link:https://docs.openshift.org/latest/dev_guide/secrets.html[OpenShift's secrets]*.
+
+It is as easy as:
+
+[source,bash]
+----
+oc create secret generic google-creds --from-file=/tmp/google-creds.json
+----
+
+And then you can validate that the secrets have been created:
+
+[source,bash]
+----
+$oc describe secret/google-creds
+Name:		google-creds
+Namespace:	roadshow
+Labels:		<none>
+Annotations:	<none>
+
+Type:	Opaque
+
+Data
+====
+google-creds.json:	2338 bytes
+----

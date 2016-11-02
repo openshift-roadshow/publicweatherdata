@@ -1,6 +1,7 @@
 package com.openshift.evg.roadshow.weather.model;
 
 /**
+ *
  * Created by jmorales on 01/11/16.
  */
 public class DataPointBuilder {
@@ -52,8 +53,10 @@ public class DataPointBuilder {
 
     public DataPoint build(){
         DataPoint point = new DataPoint(id,id);
+        point.setLatitude(latitude);
+        point.setLongitude(longitude);
         point.setPosition(new Coordinates((String)latitude,(String)longitude));
-        point.setDetails("Month: "+ month + ", Min: " + min + ", Max: "+ max + ", temp:" + temp + "]");
+        point.setDetails("Month: "+ month + ", Min: " + min + ", Max: "+ max + ", temp:" + temp);
         return point;
     }
 

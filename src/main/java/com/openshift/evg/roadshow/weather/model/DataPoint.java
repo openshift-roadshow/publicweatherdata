@@ -4,6 +4,8 @@ public class DataPoint {
 
     private Object id;
     private Object name;
+    private Object latitude;
+    private Object longitude;
     private Coordinates position;
     private Object details;
 
@@ -22,6 +24,22 @@ public class DataPoint {
 
     public void setName(Object name) {
         this.name = name;
+    }
+
+    public Object getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Object latitude) {
+        this.latitude = latitude;
+    }
+
+    public Object getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Object longitude) {
+        this.longitude = longitude;
     }
 
     public Coordinates getPosition() {
@@ -51,9 +69,8 @@ public class DataPoint {
     @Override
     public String toString() {
         return "DataPoint{" +
-                "id=" + id +
-                ", name=" + name +
-                ", coordinates=" + position +
+                "name=" + name +
+                ", position=" + position +
                 ", details=" + details +
                 '}';
     }

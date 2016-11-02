@@ -91,6 +91,9 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                   <mainClass>com.openshift.evg.roadshow.weather.WeatherDataApplication</mainClass>
+                </configuration>
             </plugin>
         </plugins>
     </build>

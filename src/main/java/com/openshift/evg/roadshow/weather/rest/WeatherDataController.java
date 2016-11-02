@@ -4,6 +4,7 @@ import com.google.api.services.bigquery.Bigquery;
 import com.openshift.evg.roadshow.weather.db.BigQueryConnection;
 import com.openshift.evg.roadshow.weather.model.DataPoint;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,17 +24,14 @@ public class WeatherDataController {
     @Autowired
     private BigQueryConnection con;
 
+    @Value("${MONTH}")
+    private String month;
+
     @RequestMapping(method = RequestMethod.GET, value = "/all", produces = "application/json")
     public List<DataPoint> getAllParks() {
         System.out.println("[DEBUG] getAllParks");
 
-        try {
-            con.createAuthorizedClient();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return new ArrayList<DataPoint>();
-        }
-        return con.getAll();
+        return con.getAll(month);
     }
 
 
@@ -45,8 +43,7 @@ public class WeatherDataController {
             @RequestParam("lon2") float lon2) {
         System.out.println("[DEBUG] findParksWithin(" + lat1 + "," + lon1 + "," + lat2 + "," + lon2 + ")");
 
-        // TODO: Implement this
-        return null;
+        return con.getAllWithin(month,lat1,lon1,lat2,lon2);
     }
 
 }

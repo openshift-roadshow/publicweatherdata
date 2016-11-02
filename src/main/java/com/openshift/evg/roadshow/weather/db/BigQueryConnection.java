@@ -9,8 +9,11 @@ import com.google.api.services.bigquery.Bigquery;
 import com.google.api.services.bigquery.BigqueryScopes;
 import com.google.api.services.bigquery.model.*;
 import com.openshift.evg.roadshow.weather.model.DataPoint;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RequestParam;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -20,53 +23,45 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
+ *
  * Created by jmorales on 01/11/16.
  */
 @Component
 public class BigQueryConnection {
 
-    public static final String GCP_CREDENTIALS_FILE = "/tmp/google-creds.json";
+    private static final String APPLICATION_NAME = "Google-OpenShift RoadShow BigQuery WeatherData";
+    private static final String TABLE = "top-amplifier-139909:gsod.temp_2016";
 
-    private static final String PROJECT_ID = "top-amplifier-139909";
+    // "/tmp/gcp/google-creds.json"
+    @Value("${GCP_CREDENTIALS_DIR}")
+    private String GCP_CREDENTIALS_DIR;
+
+    @Value("${GCP_CREDENTIALS_FILENAME}")
+    private String GCP_CREDENTIALS_FILENAME;
+
+    @Value("${GCP_PROJECT_ID}")
+    private String PROJECT_ID; // "top-amplifier-139909"
 
     private List<String> columnNames;
 
-    private String projectId = PROJECT_ID;
-    private String credentialsFile = GCP_CREDENTIALS_FILE;
-
-    public BigQueryConnection() {
-    }
-
-    public String getProjectId() {
-        return projectId;
-    }
-
-    public void setProjectId(String projectId) {
-        this.projectId = projectId;
-    }
-
-    public String getCredentialsFile() {
-        return credentialsFile;
-    }
-
-    public void setCredentialsFile(String credentialsFile) {
-        this.credentialsFile = credentialsFile;
-    }
-
-
-    private Bigquery bigquery = null;
-
     /**
+     * Create the credential
+     *
      * @return
      * @throws IOException
      */
-    public void createAuthorizedClient() throws IOException {
-        // Create the credential
-        GoogleCredential credential = GoogleCredential.fromStream(new FileInputStream(credentialsFile))
+    private Bigquery createAuthorizedClient() throws IOException {
+        if (GCP_CREDENTIALS_DIR==null)
+            throw new RuntimeException("GCP_CREDENTIALS_DIR has not been established");
+
+        if (GCP_CREDENTIALS_FILENAME==null)
+            throw new RuntimeException("GCP_CREDENTIALS_FILENAME has not been established");
+
+        GoogleCredential credential = GoogleCredential.fromStream(new FileInputStream(GCP_CREDENTIALS_DIR + File.separator + GCP_CREDENTIALS_FILENAME))
                 .createScoped(Collections.singleton(BigqueryScopes.CLOUD_PLATFORM_READ_ONLY));
 
-        bigquery = new Bigquery.Builder(new NetHttpTransport(), new JacksonFactory(), credential)
-                .setApplicationName("Google-OpenShift RoadShow BigQuery WeatherData")
+        return new Bigquery.Builder(new NetHttpTransport(), new JacksonFactory(), credential)
+                .setApplicationName(APPLICATION_NAME)
                 .build();
     }
 
@@ -78,11 +73,16 @@ public class BigQueryConnection {
      */
     private List<TableRow> executeQuery(String querySql)
             throws IOException {
+        Bigquery bigquery = createAuthorizedClient();
+
         if (bigquery == null)
             throw new RuntimeException("Connection/Authentication with BigQuery has not been established");
 
+        if (PROJECT_ID==null)
+            throw new RuntimeException("PROJECT_ID has not been established");
+
         QueryResponse query =
-                bigquery.jobs().query(projectId, new QueryRequest().setQuery(querySql)).execute();
+                bigquery.jobs().query(PROJECT_ID, new QueryRequest().setQuery(querySql)).execute();
 
         // Execute it
         GetQueryResultsResponse queryResult =
@@ -103,17 +103,8 @@ public class BigQueryConnection {
         return queryResult.getRows();
     }
 
-    public void resultsToJson(List<TableRow> rows){
-        for (TableRow row : rows) {
-            try {
-                System.out.println(getJson(row));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
 
-    public List<DataPoint> resultsToDataPoints(List<TableRow> rows){
+    private List<DataPoint> resultsToDataPoints(List<TableRow> rows) {
         List<DataPoint> points = new ArrayList<DataPoint>();
         for (TableRow row : rows) {
             DataPoint point = WeatherDataParser.convert(columnNames, row);
@@ -123,63 +114,48 @@ public class BigQueryConnection {
         return points;
     }
 
-
-    private String uniqueIdField = null;
-
-    /**
-     * Get the json document for this row.
-     *
-     * @param rows
-     * @return A string array with the first value holding the json document and the second element holding the unique id
-     *         (if configured)
-     * @throws IOException
-     */
-    @SuppressWarnings("unchecked")
-    private String getJson(@Nonnull final TableRow rows) throws IOException {
-        final Map<String, Object> document = new HashMap<String, Object>();
-
-        for (final Map.Entry<String, Object> row : rows.entrySet()) {
-            int columnCounter = 0;
-            for (TableCell field : (ArrayList<TableCell>) row.getValue()) {
-                final String key = columnNames.get(columnCounter++);
-
-                if (field.getV() instanceof String) {
-                    final String value = (String) field.getV();
-                    document.put(key, value);
-                }
-            }
-        }
-        return rows.getFactory().toString(document);
-    }
-
-
-    public List<DataPoint> getAll(){
+    public List<DataPoint> getAll(String month) {
         List<TableRow> rows = null;
         try {
-            rows =  executeQuery(
+            rows = executeQuery(
                     "SELECT avg_max_c AS max, avg_min_c AS min, avg_temp_c AS temp, mo AS month, stn AS station, lat, lon "
-                            + "FROM [top-amplifier-139909:gsod.temp_2016]"
-                            + "WHERE stn='644590'");
+                            + "FROM [" + TABLE + "]"
+                            + "WHERE mo='" + month + "'");
         } catch (IOException e) {
             e.printStackTrace();
         }
-        if (rows!=null)
+        if (rows != null)
+            return resultsToDataPoints(rows);
+        return new ArrayList<DataPoint>();
+    }
+
+    public List<DataPoint> getAllWithin(String month,
+                                        float lat1,
+                                        float lon1,
+                                        float lat2,
+                                        float lon2) {
+        List<TableRow> rows = null;
+        try {
+            rows = executeQuery(
+                    "SELECT avg_max_c AS max, avg_min_c AS min, avg_temp_c AS temp, mo AS month, stn AS station, lat, lon "
+                            + "FROM [" + TABLE + "]"
+                            + "WHERE mo='" + month + "' AND lat<=" + lat1 + " AND lat>=" + lat2 + " " +
+                            " AND lon>=" + lon1 + " AND lon<=" + lon2);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (rows != null)
             return resultsToDataPoints(rows);
         return new ArrayList<DataPoint>();
     }
 
     public static void main(String[] args) throws IOException {
-
         // Create a new Bigquery client authorized via Application Default Credentials.
         BigQueryConnection con = new BigQueryConnection();
-        con.createAuthorizedClient();
 
-        List<TableRow> rows =
-                con.executeQuery(
-                        "SELECT avg_max_c AS max, avg_min_c AS min, avg_temp_c AS temp, mo AS month, stn AS station, lat, lon "
-                                + "FROM [top-amplifier-139909:gsod.temp_2016]"
-                                + "WHERE stn='644590'");
-
-        con.resultsToDataPoints(rows);
+//        for (DataPoint p : con.getAll("10")) {
+        for (DataPoint p : con.getAllWithin("10",45,-20,35,5)) {
+            System.out.println(p);
+        }
     }
 }
