@@ -34,13 +34,13 @@ public class BigQueryConnection {
 
     // "/tmp/gcp/google-creds.json"
     @Value("${GCP_CREDENTIALS_DIR}")
-    private String GCP_CREDENTIALS_DIR;
+    public String GCP_CREDENTIALS_DIR;
 
     @Value("${GCP_CREDENTIALS_FILENAME}")
-    private String GCP_CREDENTIALS_FILENAME;
+    public String GCP_CREDENTIALS_FILENAME;
 
     @Value("${GCP_PROJECT_ID}")
-    private String PROJECT_ID; // "top-amplifier-139909"
+    public String PROJECT_ID; // "top-amplifier-139909"
 
     private List<String> columnNames;
 
@@ -130,10 +130,10 @@ public class BigQueryConnection {
     }
 
     public List<DataPoint> getAllWithin(String month,
-                                        float lat1,
-                                        float lon1,
-                                        float lat2,
-                                        float lon2) {
+                                        double lat1,
+                                        double lon1,
+                                        double lat2,
+                                        double lon2) {
         List<TableRow> rows = null;
         try {
             rows = executeQuery(
@@ -152,9 +152,12 @@ public class BigQueryConnection {
     public static void main(String[] args) throws IOException {
         // Create a new Bigquery client authorized via Application Default Credentials.
         BigQueryConnection con = new BigQueryConnection();
+        con.PROJECT_ID="top-amplifier-139909";
+        con.GCP_CREDENTIALS_DIR="/tmp/gcp";
+        con.GCP_CREDENTIALS_FILENAME="google-creds.json";
 
 //        for (DataPoint p : con.getAll("10")) {
-        for (DataPoint p : con.getAllWithin("10",45,-20,35,5)) {
+        for (DataPoint p : con.getAllWithin("10",52.72,-31.13,-45.69,15.73)) {
             System.out.println(p);
         }
     }

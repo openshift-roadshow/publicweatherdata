@@ -7,7 +7,7 @@ public class DataPoint {
     private Object latitude;
     private Object longitude;
     private Coordinates position;
-    private Object details;
+    private Object info;
 
 
     public DataPoint() {
@@ -58,12 +58,12 @@ public class DataPoint {
         this.id = id;
     }
 
-    public Object getDetails() {
-        return details;
+    public Object getInfo() {
+        return info;
     }
 
-    public void setDetails(Object details) {
-        this.details = details;
+    public void setInfo(Object info) {
+        this.info = info;
     }
 
     @Override
@@ -71,7 +71,7 @@ public class DataPoint {
         return "DataPoint{" +
                 "name=" + name +
                 ", position=" + position +
-                ", details=" + details +
+                ", info=" + info +
                 '}';
     }
 }

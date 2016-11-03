@@ -56,7 +56,7 @@ public class DataPointBuilder {
         point.setLatitude(latitude);
         point.setLongitude(longitude);
         point.setPosition(new Coordinates((String)latitude,(String)longitude));
-        point.setDetails("Month: "+ month + ", Min: " + min + ", Max: "+ max + ", temp:" + temp);
+        point.setInfo("Min: " + min + ", Max: "+ max + ", Avg:" + temp);
         return point;
     }
 

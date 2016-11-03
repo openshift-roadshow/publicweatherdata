@@ -18,6 +18,11 @@ public class BackendController{
 
     @RequestMapping(method = RequestMethod.GET, value = "/", produces = "application/json")
     public Backend get() {
-        return new Backend("weatherdata","Public weather data", new Coordinates("47.039304", "14.505178"), 5);
+        Backend be = new Backend("weatherdata","Public weather data", new Coordinates("47.039304", "14.505178"), 5);
+        be.setMaxZoom(6);
+        be.setType(Backend.BACKEND_TYPE_TEMP);
+        be.setScope(Backend.BACKEND_SCOPE_WITHIN);
+        be.setVisible(true);
+        return be;
     }
 }

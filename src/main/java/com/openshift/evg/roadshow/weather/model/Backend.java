@@ -7,17 +7,28 @@ package com.openshift.evg.roadshow.weather.model;
  * Created by jmorales on 24/08/16.
  */
 public class Backend {
+
+    public static final String BACKEND_TYPE_MARKER  = "marker";
+    public static final String BACKEND_TYPE_CLUSTER = "cluster";
+    public static final String BACKEND_TYPE_TEMP    = "temp";
+    public static final String BACKEND_TYPE_HEATMAP = "heatmap";
+
+    public static final String BACKEND_SCOPE_ALL   = "all";
+    public static final String BACKEND_SCOPE_WITHIN = "within";
+
     private String id;
     private String displayName;
-
     private Coordinates center = new Coordinates("0", "0");
     private int zoom = 1;
-
+    private int maxZoom = 1;
+    private String type = BACKEND_TYPE_CLUSTER;
+    private boolean visible = true;
+    private String scope = BACKEND_SCOPE_ALL;
 
     public Backend() {
     }
 
-    public Backend(String id, String displayName) {
+    public Backend(String id, String displayName, String service) {
         this.id = id;
         this.displayName = displayName;
     }
@@ -61,6 +72,38 @@ public class Backend {
         this.zoom = zoom;
     }
 
+    public int getMaxZoom() {
+        return maxZoom;
+    }
+
+    public void setMaxZoom(int maxzoom) {
+        this.maxZoom = maxzoom;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public boolean isVisible() {
+        return visible;
+    }
+
+    public void setVisible(boolean visible) {
+        this.visible = visible;
+    }
+
+    public String getScope() {
+        return scope;
+    }
+
+    public void setScope(String scope) {
+        this.scope = scope;
+    }
+
     @Override
     public String toString() {
         return "Backend{" +
@@ -68,7 +111,10 @@ public class Backend {
                 ", displayName='" + displayName + '\'' +
                 ", center='" + center + '\'' +
                 ", zoom='" + zoom + '\'' +
+                ", type='" + type + '\'' +
+                ", scope='" + scope + '\'' +
+                ", visible='" + visible + '\'' +
+                ", maxZoom='" + maxZoom + '\'' +
                 '}';
     }
-
 }
