@@ -5,7 +5,8 @@
     "name": "publicweatherdata",
     "annotations": {
       "iconClass": "icon-java",
-      "description": "Application template Public Weather Data backend running on SpringBoot and using mongodb"
+      "description": "Application template Public Weather Data backend running on SpringBoot and using mongodb",
+      "tags": "roadshow,roadshow-backend,gcpservice,bigtable,springboot,java"
     }
   },
   "labels": {
@@ -55,7 +56,6 @@
       "description": "User's GCP Project Id",
       "displayName": "GCP Project Id",
       "name": "GCP_PROJECT_ID",
-      "value": "top-amplifier-139909",
       "required": true
     },
     {
