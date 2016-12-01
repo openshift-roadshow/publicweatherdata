@@ -30,7 +30,7 @@ import javax.annotation.Nullable;
 public class BigQueryConnection {
 
     private static final String APPLICATION_NAME = "Google-OpenShift RoadShow BigQuery WeatherData";
-    private static final String TABLE = "top-amplifier-139909:gsod.temp_2016";
+    private static final String TABLE = "top-amplifier-139909:gsod.temp_20xx";
 
     // "/tmp/gcp/google-creds.json"
     @Value("${GCP_CREDENTIALS_DIR}")
@@ -40,7 +40,7 @@ public class BigQueryConnection {
     public String GCP_CREDENTIALS_FILENAME;
 
     @Value("${GCP_PROJECT_ID}")
-    public String PROJECT_ID; // "top-amplifier-139909"
+    public String PROJECT_ID;
 
     private List<String> columnNames;
 
