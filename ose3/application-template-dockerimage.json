@@ -1,0 +1,262 @@
+{
+  "kind": "Template",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "publicweatherdata",
+    "annotations": {
+      "iconClass": "icon-java",
+      "description": "Application template Public Weather Data backend running on SpringBoot and using mongodb",
+      "tags": "roadshow,roadshow-backend,gcpservice,bigtable,springboot,java"
+    }
+  },
+  "labels": {
+    "application": "publicweatherdata",
+    "createdBy": "publicweatherdata-template"
+  },
+  "parameters": [
+    {
+      "description": "The name for the Public Weather Data application.",
+      "displayName": "Application Name",
+      "name": "APPLICATION_NAME",
+      "value": "publicweatherdata",
+      "required": true
+    },
+    {
+      "description": "Custom hostname for Public Weather Data application.  Leave blank for default hostname, e.g.: <application-name>.<project>.<default-domain-suffix>",
+      "displayName": "Application route",
+      "name": "APPLICATION_HOSTNAME"
+    },
+    {
+      "description": "Month for displaying Public Weather Data",
+      "displayName": "Month",
+      "name": "MONTH",
+      "required": true
+    },
+    {
+      "description": "User's GCP Project Id",
+      "displayName": "GCP Project Id",
+      "name": "GCP_PROJECT_ID",
+      "required": true
+    },
+    {
+      "description": "Directory where the GCP Credentials file will be stored",
+      "displayName": "GCP Credentials Dir",
+      "name": "GCP_CREDENTIALS_DIR",
+      "value": "/tmp/gcp",
+      "required": true
+    },
+    {
+      "description": "Filename of the GCP Credentials file. This is the file downloaded when creating the GCP service account",
+      "displayName": "GCP Credentials Filename",
+      "name": "GCP_CREDENTIALS_FILENAME",
+      "value": "google-creds.json",
+      "required": true
+    },
+    {
+      "description": "Name of the OpenShift secret with the GCP credentials file. The key in the secret needs to be google-creds",
+      "displayName": "GCP Credentials Secret",
+      "name": "GCP_CREDENTIALS_SECRET",
+      "value": "google-creds",
+      "required": true
+    }
+  ],
+  "objects": [
+    {
+      "kind": "ImageStream",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${APPLICATION_NAME}"
+      },
+      "spec": {
+        "tags": [
+          {
+            "name": "1.0.0",
+            "from": {
+               "kind": "DockerImage",
+               "name": "openshiftroadshow/publicweatherdata:1.0.0"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "DeploymentConfig",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${APPLICATION_NAME}",
+        "labels": {
+          "component": "${APPLICATION_NAME}"
+        }
+      },
+      "spec": {
+        "strategy": {
+          "type": "Recreate",
+          "resources": {}
+        },
+        "triggers": [
+          {
+            "type": "ConfigChange"
+          },
+          {
+            "type": "ImageChange",
+            "imageChangeParams": {
+              "automatic": true,
+              "containerNames": [
+                "${APPLICATION_NAME}"
+              ],
+              "from": {
+                "kind": "ImageStreamTag",
+                "name": "${APPLICATION_NAME}:1.0.0"
+              }
+            }
+          }
+        ],
+        "replicas": 1,
+        "test": false,
+        "selector": {
+          "component": "${APPLICATION_NAME}"
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "component": "${APPLICATION_NAME}"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "name": "${APPLICATION_NAME}",
+                "image": "${APPLICATION_NAME}",
+                "ports": [
+                  {
+                    "containerPort": 8080,
+                    "protocol": "TCP"
+                  }
+                ],
+                "env": [
+                  {
+                    "name": "KUBERNETES_NAMESPACE",
+                    "valueFrom": {
+                      "fieldRef": {
+                        "fieldPath": "metadata.namespace"
+                      }
+                    }
+                  },
+                  {
+                    "name": "GCP_CREDENTIALS_DIR",
+                    "value": "${GCP_CREDENTIALS_DIR}"
+                  },
+                  {
+                    "name": "GCP_CREDENTIALS_FILENAME",
+                    "value": "${GCP_CREDENTIALS_FILENAME}"
+                  },
+                  {
+                    "name": "GCP_PROJECT_ID",
+                    "value": "${GCP_PROJECT_ID}"
+                  },
+                  {
+                    "name": "MONTH",
+                    "value": "${MONTH}"
+                  }
+                ],
+                "resources": {},
+                "volumeMounts": [
+                  {
+                    "name": "secret-volume",
+                    "mountPath": "${GCP_CREDENTIALS_DIR}",
+                    "readOnly": true
+                  }
+                ],
+                "livenessProbe": {
+                  "httpGet": {
+                    "path": "/ws/healthz/",
+                    "port": 8080,
+                    "scheme": "HTTP"
+                  },
+                  "initialDelaySeconds": 120,
+                  "timeoutSeconds": 1,
+                  "periodSeconds": 10,
+                  "successThreshold": 1,
+                  "failureThreshold": 3
+                },
+                "readinessProbe": {
+                  "httpGet": {
+                    "path": "/ws/healthz/",
+                    "port": 8080,
+                    "scheme": "HTTP"
+                  },
+                  "initialDelaySeconds": 20,
+                  "timeoutSeconds": 1,
+                  "periodSeconds": 10,
+                  "successThreshold": 1,
+                  "failureThreshold": 3
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "imagePullPolicy": "IfNotPresent"
+              }
+            ],
+            "volumes": [
+              {
+                "name": "secret-volume",
+                "secret": {
+                  "secretName": "${GCP_CREDENTIALS_SECRET}"
+                }
+              }
+            ],
+            "restartPolicy": "Always",
+            "terminationGracePeriodSeconds": 30,
+            "dnsPolicy": "ClusterFirst",
+            "securityContext": {}
+          }
+        }
+      }
+    },
+    {
+      "kind": "Service",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${APPLICATION_NAME}",
+        "labels": {
+          "component": "${APPLICATION_NAME}",
+          "type": "parksmap-backend"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "name": "8080-tcp",
+            "protocol": "TCP",
+            "port": 8080,
+            "targetPort": 8080
+          }
+        ],
+        "selector": {
+          "component": "${APPLICATION_NAME}"
+        },
+        "type": "ClusterIP",
+        "sessionAffinity": "None"
+      }
+    },
+    {
+      "kind": "Route",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${APPLICATION_NAME}",
+        "labels": {
+          "component": "${APPLICATION_NAME}"
+        }
+      },
+      "spec": {
+        "host": "${APPLICATION_HOSTNAME}",
+        "to": {
+          "kind": "Service",
+          "name": "${APPLICATION_NAME}",
+          "weight": 100
+        },
+        "port": {
+          "targetPort": "8080-tcp"
+        }
+      }
+    }
+  ]
+}

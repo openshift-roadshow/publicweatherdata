@@ -1,0 +1,19 @@
+pushd ..
+mvn clean install
+cp target/weathermap.jar ./docker/weathermap.jar
+popd
+docker build -t "openshiftroadshow/publicweatherdata:latest" .
+
+echo "-------------------------------------------"
+echo ""
+echo "Now to publish the image in dockerhub do:"
+echo ""
+echo " docker login # With your docker credentials"
+echo ""
+echo " docker tag openshiftroadshow/publicweatherdata:latest openshiftroadshow/publicweatherdata:<VERSION>"
+echo ""
+echo " docker push openshiftroadshow/publicweatherdata:<VERSION>"
+echo ""
+echo " NOTE: Replace <VERSION> with the actual version of the image you're building"
+echo ""
+echo "-------------------------------------------"
